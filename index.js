@@ -1,19 +1,15 @@
-const express = require('express');
+const express = require("express");
+const cors = require("cors");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 8000;
 
-
-
-
 app.use(express.json());
 
+app.use(cors());
 
-
-
-
-app.get('/', (req, res) => {
-    res.send(`
+app.get("/", (req, res) => {
+  res.send(`
         <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -71,15 +67,13 @@ app.get('/', (req, res) => {
     </div>
 </body>
 </html>
-
     `);
 });
 
-
-            app.get('/healthcheck', (req, res) => {
-    res.status(200).json({ status: 'ok', message: 'Service is healthy!' });
+app.get("/healthcheck", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Service is healthy!" });
 });
 
-app.listen(port , () => {
-    console.log(`Server is running on http://localhost:${port}`);
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
