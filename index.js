@@ -1,13 +1,28 @@
-const express = require("express");
-const cors = require("cors");
-const app = express();
 require("dotenv").config();
+
+const express = require("express");
+const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
+mongoose.set("strictQuery", false);
+const cors = require("cors");
+
+const userRoute = require("./routes/auth");
+const { checkForAuthenticationCookie } = require("./middleware/authMiddleware");
+
+const app = express();
 const port = process.env.PORT || 8000;
 
-app.use(express.json());
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then((e) => console.log("MongoDB Connected"));
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(checkForAuthenticationCookie("token"));
 app.use(cors());
 
+app.use("/user", userRoute);
 app.get("/", (req, res) => {
   res.send(`
         <!DOCTYPE html>
