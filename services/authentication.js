@@ -1,20 +1,11 @@
-const JWT = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
-function createTokenForUser(user) {
-  const payload = {
-    _id: user._id,
-    email: user.email,
-  };
-  const token = JWT.sign(payload, process.env.JWT_SECRET);
-  return token;
-}
-
-function validateToken(token) {
-  const payload = JWT.verify(token, process.env.JWT_SECRET);
-  return payload;
-}
-
-module.exports = {
-  createTokenForUser,
-  validateToken,
+const generateToken = (userId, role) => {
+  return jwt.sign(
+    { user: { id: userId, role: role } },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" },
+  );
 };
+
+module.exports = generateToken;
