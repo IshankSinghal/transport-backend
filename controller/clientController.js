@@ -1,4 +1,4 @@
-const Client = require("../models/Client"); // Adjust the path as needed
+const Client = require("../models/client"); // Adjust the path as needed
 
 // Create a new client
 exports.createClient = async (req, res) => {

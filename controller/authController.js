@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const User = require("../models/User");
+const User = require("../models/user");
 const generateToken = require("../services/authentication");
 const rateLimit = require("express-rate-limit");
 const { body, validationResult } = require("express-validator");
