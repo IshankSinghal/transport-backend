@@ -1,18 +1,49 @@
 const bcrypt = require("bcryptjs");
-const User = require("../models/userModel");
-const generateToken = require("../utils/generateToken");
+const User = require("../models/User");
+const generateToken = require("../services/authentication");
+const rateLimit = require("express-rate-limit");
+const { body, validationResult } = require("express-validator");
 
-exports.signup = async (req, res) => {
+signup = async (req, res) => {
+  // Validate input
+  console.log("in");
+  await body("username")
+    .trim()
+    .notEmpty()
+    .withMessage("Username is required")
+    .run(req);
+  await body("email").isEmail().withMessage("Invalid email address").run(req);
+  await body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters")
+    .run(req);
+  await body("role")
+    .optional()
+    .isIn(["user", "admin"])
+    .withMessage("Invalid role")
+    .run(req);
+
+  // Handle validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res
+      .status(400)
+      .json({ message: "Invalid input", errors: errors.array() });
+  }
+
   const { username, email, password, role } = req.body;
 
   try {
+    // Check if user already exists
     const userExists = await User.findOne({ email });
-
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
     const newUser = await User.create({
       username,
       email,
@@ -20,6 +51,7 @@ exports.signup = async (req, res) => {
       role,
     });
 
+    // Generate token
     const token = generateToken(newUser._id, role);
 
     res.status(201).json({
@@ -33,26 +65,43 @@ exports.signup = async (req, res) => {
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("Server error during signup:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-exports.signin = async (req, res) => {
+signin = async (req, res) => {
+  // Validate input
+  await body("email").isEmail().withMessage("Invalid email address").run(req);
+  await body("password")
+    .notEmpty()
+    .withMessage("Password is required")
+    .run(req);
+
+  // Handle validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res
+      .status(400)
+      .json({ message: "Invalid input", errors: errors.array() });
+  }
+
   const { email, password } = req.body;
 
   try {
+    // Check if user exists
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Generate token
     const token = generateToken(user._id, user.role);
 
     res.status(200).json({
@@ -65,6 +114,8 @@ exports.signin = async (req, res) => {
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("Server error during signin:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
+module.exports = { signup, signin };

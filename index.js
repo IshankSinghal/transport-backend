@@ -1,9 +1,10 @@
 require("dotenv").config();
-
+const connectDB = require("./config/dbconnect");
 const express = require("express");
-const mongoose = require("mongoose");
+const clientRouter = require("./routes/clientRoutes");
 const cookieParser = require("cookie-parser");
-mongoose.set("strictQuery", false);
+const shipmentRoutes = require("./routes/shipmentRoutes");
+
 const cors = require("cors");
 
 const authRoute = require("./routes/authRouter");
@@ -11,16 +12,16 @@ const authRoute = require("./routes/authRouter");
 const app = express();
 const port = process.env.PORT || 8000;
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then((e) => console.log("MongoDB Connected"));
+connectDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 
-app.use("/auth", authRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/client", clientRouter);
+app.use("/api/shipment", shipmentRoutes);
 app.get("/", (req, res) => {
   res.send(`
         <!DOCTYPE html>
