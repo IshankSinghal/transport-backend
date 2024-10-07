@@ -4,7 +4,8 @@ const express = require("express");
 const clientRouter = require("./routes/clientRoutes");
 const cookieParser = require("cookie-parser");
 const shipmentRoutes = require("./routes/shipmentRoutes");
-
+const truckRouter = require("./routes/truckRouter");
+const driverRouter = require("./routes/driverRouter");
 const cors = require("cors");
 
 const authRoute = require("./routes/authRouter");
@@ -22,6 +23,8 @@ app.use(cors());
 app.use("/api/auth", authRoute);
 app.use("/api/client", clientRouter);
 app.use("/api/shipment", shipmentRoutes);
+app.use("/api/truck", truckRouter);
+app.use("/api/driver", driverRouter);
 app.get("/", (req, res) => {
   res.send(`
         <!DOCTYPE html>
