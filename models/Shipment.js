@@ -48,11 +48,17 @@ const shipmentSchema = new mongoose.Schema(
       enum: ["pending", "delivered", "cancelled"],
       default: "pending",
     },
+    truckId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Truck",
+    },
+    driverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Driver",
+    },
   },
   { timestamps: true },
-); // Automatically adds createdAt and updatedAt timestamps
-
-// Pre-save hook to auto-increment shipmentId
+);
 shipmentSchema.pre("save", async function (next) {
   if (this.isNew) {
     try {

@@ -6,9 +6,11 @@ const cookieParser = require("cookie-parser");
 const shipmentRoutes = require("./routes/shipmentRoutes");
 const truckRouter = require("./routes/truckRouter");
 const driverRouter = require("./routes/driverRouter");
+const billingRouter = require("./routes/billingRouter");
 const cors = require("cors");
 
 const authRoute = require("./routes/authRouter");
+const Bill = require("./models/Billing");
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -25,6 +27,7 @@ app.use("/api/client", clientRouter);
 app.use("/api/shipment", shipmentRoutes);
 app.use("/api/truck", truckRouter);
 app.use("/api/driver", driverRouter);
+app.use("/api/billing", billingRouter);
 app.get("/", (req, res) => {
   res.send(`
         <!DOCTYPE html>
@@ -94,3 +97,19 @@ app.get("/healthcheck", (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+const updateOverdueBills = async () => {
+  const now = new Date();
+
+  try {
+    const overdueBills = await Bill.updateMany(
+      { dueDate: { $lt: now }, paymentStatus: "pending" },
+      { paymentStatus: "overdue" },
+    );
+
+    console.log(`${overdueBills.nModified} bills marked as overdue.`);
+  } catch (error) {
+    console.error("Error updating overdue bills:", error);
+  }
+};
+setInterval(updateOverdueBills, 86400000);
