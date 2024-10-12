@@ -1,13 +1,14 @@
 require("dotenv").config();
 const connectDB = require("./config/dbconnect");
 const express = require("express");
-const clientRouter = require("./routes/clientRoutes");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
+
+const clientRouter = require("./routes/clientRoutes");
 const shipmentRoutes = require("./routes/shipmentRoutes");
 const truckRouter = require("./routes/truckRouter");
 const driverRouter = require("./routes/driverRouter");
 const billingRouter = require("./routes/billingRouter");
-const cors = require("cors");
 
 const authRoute = require("./routes/authRouter");
 const Bill = require("./models/Billing");
@@ -22,11 +23,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 
-app.use("/api/auth", authRoute);
-app.use("/api/client", clientRouter);
+app.use("/api/auth", authRoute); // WORKING
+app.use("/api/client", clientRouter); // WORKING
 app.use("/api/shipment", shipmentRoutes);
 app.use("/api/truck", truckRouter);
-app.use("/api/driver", driverRouter);
+app.use("/api/driver", driverRouter); // WORKING
 app.use("/api/billing", billingRouter);
 app.get("/", (req, res) => {
   res.send(`

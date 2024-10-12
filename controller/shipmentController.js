@@ -7,7 +7,7 @@ const { body, validationResult } = require("express-validator");
 const createShipment = async (req, res) => {
   // Validate request body using express-validator
   await body("clientId")
-    .isInt()
+    .isNumeric()
     .withMessage("Client ID must be an integer.")
     .run(req);
   await body("pickupLocation")
@@ -41,12 +41,12 @@ const createShipment = async (req, res) => {
     .run(req);
   await body("truckId")
     .optional()
-    .isMongoId()
+    .isNumeric()
     .withMessage("Truck ID must be a valid MongoDB ObjectId.")
     .run(req);
   await body("driverId")
     .optional()
-    .isMongoId()
+    .isNumeric()
     .withMessage("Driver ID must be a valid MongoDB ObjectId.")
     .run(req);
 
@@ -71,6 +71,7 @@ const createShipment = async (req, res) => {
 
   try {
     const shipment = new Shipment({
+      shipmentId: 0,
       clientId,
       pickupLocation,
       deliveryLocation,

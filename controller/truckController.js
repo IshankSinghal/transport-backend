@@ -68,7 +68,17 @@ const createTruck = async (req, res) => {
   } = req.body;
 
   try {
+    const truckExist = await Truck.findOne({
+      registrationNumber: registrationNumber,
+    });
+    if (truckExist) {
+      return res.status(400).json({
+        success: false,
+        message: "Truck Exists",
+      });
+    }
     const truck = new Truck({
+      truckId: 0,
       registrationNumber,
       model,
       capacity,
@@ -142,7 +152,6 @@ const updateTruckById = async (req, res) => {
     .withMessage("Truck ID must be a string.")
     .run(req);
   await body("registrationNumber")
-    .optional()
     .isString()
     .withMessage("Registration number must be a string.")
     .run(req);
@@ -272,6 +281,7 @@ const getTrucksDueForMaintenance = async (req, res) => {
       lastServicedDate: {
         $lte: new Date(new Date() - 1000 * 60 * 60 * 24 * 30 * 6),
       },
+      availabilityStatus: "Maintenance",
     });
 
     return res.status(200).json({ trucksDueForMaintenance });
@@ -286,11 +296,12 @@ const getTrucksDueForMaintenance = async (req, res) => {
 // Get trucks by model or capacity
 const getTrucksByFilter = async (req, res) => {
   const { model, capacity } = req.query;
-
+  console.log("hitting");
   try {
     const filter = {};
     if (model) filter.model = model;
     if (capacity) filter.capacity = { $gte: capacity };
+    console.log(filter);
 
     const trucks = await Truck.find(filter);
 

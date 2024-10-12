@@ -13,6 +13,9 @@ const router = express.Router();
 // Route to create a new driver
 router.post("/", createDriver);
 
+// Route to get available drivers
+router.get("/available", getAvailableDrivers);
+
 // Route to get a driver by ID
 router.get("/:driverId", getDriverById);
 
@@ -24,8 +27,5 @@ router.delete("/:driverId", deleteDriverById);
 
 // Route to get all drivers
 router.get("/", getAllDrivers);
-
-// Route to get available drivers
-router.get("/available", getAvailableDrivers);
 
 module.exports = router;
