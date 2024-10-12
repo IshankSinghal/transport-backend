@@ -51,10 +51,12 @@ const shipmentSchema = new mongoose.Schema(
     truckId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Truck",
+      required: true,
     },
     driverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Driver",
+      required: true,
     },
   },
   { timestamps: true },

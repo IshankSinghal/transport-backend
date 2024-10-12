@@ -6,6 +6,6 @@ const { createShipment } = require("../controller/shipmentController"); // Adjus
 const { authMiddleware } = require("../middleware/authMiddleware");
 
 // Create a new shipment
-router.post("/create", authMiddleware, createShipment);
+router.post("/create", createShipment);
 
 module.exports = router;

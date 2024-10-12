@@ -14,8 +14,9 @@ const createDriver = async (req, res) => {
     .withMessage("License number is required.")
     .run(req);
   await body("phoneNumber")
-    .isString()
+    .isNumeric()
     .notEmpty()
+    .isMobilePhone()
     .withMessage("Phone number is required.")
     .run(req);
   await body("address")
@@ -56,7 +57,17 @@ const createDriver = async (req, res) => {
   } = req.body;
 
   try {
+    const exist = await Driver.findOne({ licenseNumber: licenseNumber });
+    console.log(exist);
+    if (exist) {
+      return res.status(400).json({
+        success: false,
+        message: "License Exists",
+      });
+    }
+
     const driver = new Driver({
+      driverId: 0,
       name,
       licenseNumber,
       phoneNumber,
@@ -68,6 +79,7 @@ const createDriver = async (req, res) => {
 
     // Save the driver to the database
     await driver.save();
+    console.log("saving");
 
     return res.status(201).json({
       message: "Driver created successfully.",
@@ -94,7 +106,7 @@ const createDriver = async (req, res) => {
 // Get a driver by ID
 const getDriverById = async (req, res) => {
   await param("driverId")
-    .isMongoId()
+    .isNumeric()
     .withMessage("Driver ID must be a valid ID.")
     .run(req);
 
@@ -123,7 +135,7 @@ const getDriverById = async (req, res) => {
 // Update a driver by ID
 const updateDriverById = async (req, res) => {
   await param("driverId")
-    .isMongoId()
+    .isNumeric()
     .withMessage("Driver ID must be a valid ID.")
     .run(req);
 
@@ -197,7 +209,7 @@ const updateDriverById = async (req, res) => {
 // Delete a driver by ID
 const deleteDriverById = async (req, res) => {
   await param("driverId")
-    .isMongoId()
+    .isNumeric()
     .withMessage("Driver ID must be a valid ID.")
     .run(req);
 

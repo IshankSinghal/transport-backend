@@ -8,15 +8,6 @@ router.post("/", truckController.createTruck);
 // Get all trucks
 router.get("/", truckController.getAllTrucks);
 
-// Get a truck by ID
-router.get("/:truckId", truckController.getTruckById);
-
-// Update a truck by ID
-router.put("/:truckId", truckController.updateTruckById);
-
-// Delete a truck by ID
-router.delete("/:truckId", truckController.deleteTruckById);
-
 // Get all available trucks
 router.get("/available", truckController.getAvailableTrucks);
 
@@ -25,5 +16,14 @@ router.get("/maintenance", truckController.getTrucksDueForMaintenance);
 
 // Get trucks by model or capacity
 router.get("/filter", truckController.getTrucksByFilter);
+
+// Get a truck by ID
+router.get("/:truckId", truckController.getTruckById);
+
+// Update a truck by ID
+router.put("/:truckId", truckController.updateTruckById);
+
+// Delete a truck by ID
+router.delete("/:truckId", truckController.deleteTruckById);
 
 module.exports = router;
