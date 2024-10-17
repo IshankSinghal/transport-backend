@@ -13,6 +13,32 @@ const clientSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    phoneNumber: {
+      type: Number,
+      required: true,
+    },
+    companyName: {
+      type: String,
+      required: true,
+    },
+    industry: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
+    note: {
+      type: String,
+      required: false,
+    },
   },
   { timestamps: true },
 );
