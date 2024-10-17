@@ -49,12 +49,12 @@ const shipmentSchema = new mongoose.Schema(
       default: "pending",
     },
     truckId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Number,
       ref: "Truck",
       required: true,
     },
     driverId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Number,
       ref: "Driver",
       required: true,
     },

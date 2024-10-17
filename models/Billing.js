@@ -10,12 +10,12 @@ const billSchema = new mongoose.Schema(
       index: true,
     },
     clientId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Number,
       ref: "Client",
       required: true,
     },
     shipmentId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Number,
       ref: "Shipment",
       required: true,
     },

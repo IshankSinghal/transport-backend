@@ -6,37 +6,39 @@ const { body, validationResult } = require("express-validator");
 // Create a new bill
 const createBill = async (req, res) => {
   // Validate request body using express-validator
-  await body("clientId")
-    .isMongoId()
-    .withMessage("Client ID must be a valid MongoDB ObjectId.")
-    .run(req);
-  await body("shipmentId")
-    .isMongoId()
-    .withMessage("Shipment ID must be a valid MongoDB ObjectId.")
-    .run(req);
-  await body("dueDate")
-    .isISO8601()
-    .toDate()
-    .withMessage("Due date must be a valid date.")
-    .run(req);
-  await body("amount")
-    .isFloat({ gt: 0 })
-    .withMessage("Amount must be a positive number.")
-    .run(req);
-  await body("taxAmount")
-    .isFloat({ gt: 0 })
-    .withMessage("Tax amount must be a positive number.")
-    .run(req);
-  await body("totalAmount")
-    .isFloat({ gt: 0 })
-    .withMessage("Total amount must be a positive number.")
-    .run(req);
-  await body("paymentMethod")
-    .isIn(["card", "bank transfer", "cash"])
-    .withMessage(
-      "Payment method must be either 'card', 'bank transfer', or 'cash'.",
-    )
-    .run(req);
+  await Promise.all([
+    body("clientId")
+      .isMongoId()
+      .withMessage("Client ID must be a valid MongoDB ObjectId.")
+      .run(req),
+    body("shipmentId")
+      .isMongoId()
+      .withMessage("Shipment ID must be a valid MongoDB ObjectId.")
+      .run(req),
+    body("dueDate")
+      .isISO8601()
+      .toDate()
+      .withMessage("Due date must be a valid date.")
+      .run(req),
+    body("amount")
+      .isFloat({ gt: 0 })
+      .withMessage("Amount must be a positive number.")
+      .run(req),
+    body("taxAmount")
+      .isFloat({ gt: 0 })
+      .withMessage("Tax amount must be a positive number.")
+      .run(req),
+    body("totalAmount")
+      .isFloat({ gt: 0 })
+      .withMessage("Total amount must be a positive number.")
+      .run(req),
+    body("paymentMethod")
+      .isIn(["card", "bank transfer", "cash"])
+      .withMessage(
+        "Payment method must be either 'card', 'bank transfer', or 'cash'.",
+      )
+      .run(req),
+  ]);
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -124,34 +126,36 @@ const updateBill = async (req, res) => {
   const { id } = req.params;
 
   // Validate request body
-  await body("dueDate")
-    .optional()
-    .isISO8601()
-    .toDate()
-    .withMessage("Due date must be a valid date.")
-    .run(req);
-  await body("amount")
-    .optional()
-    .isFloat({ gt: 0 })
-    .withMessage("Amount must be a positive number.")
-    .run(req);
-  await body("taxAmount")
-    .optional()
-    .isFloat({ gt: 0 })
-    .withMessage("Tax amount must be a positive number.")
-    .run(req);
-  await body("totalAmount")
-    .optional()
-    .isFloat({ gt: 0 })
-    .withMessage("Total amount must be a positive number.")
-    .run(req);
-  await body("paymentMethod")
-    .optional()
-    .isIn(["card", "bank transfer", "cash"])
-    .withMessage(
-      "Payment method must be either 'card', 'bank transfer', or 'cash'.",
-    )
-    .run(req);
+  await Promise.all([
+    body("dueDate")
+      .optional()
+      .isISO8601()
+      .toDate()
+      .withMessage("Due date must be a valid date.")
+      .run(req),
+    body("amount")
+      .optional()
+      .isFloat({ gt: 0 })
+      .withMessage("Amount must be a positive number.")
+      .run(req),
+    body("taxAmount")
+      .optional()
+      .isFloat({ gt: 0 })
+      .withMessage("Tax amount must be a positive number.")
+      .run(req),
+    body("totalAmount")
+      .optional()
+      .isFloat({ gt: 0 })
+      .withMessage("Total amount must be a positive number.")
+      .run(req),
+    body("paymentMethod")
+      .optional()
+      .isIn(["card", "bank transfer", "cash"])
+      .withMessage(
+        "Payment method must be either 'card', 'bank transfer', or 'cash'.",
+      )
+      .run(req),
+  ]);
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -242,6 +246,7 @@ const updatePaymentStatus = async (req, res) => {
       .json({ error: "An internal server error occurred." });
   }
 };
+
 // Calculate total outstanding amount for a client
 const getOutstandingAmountByClient = async (req, res) => {
   const { clientId } = req.params;
@@ -269,6 +274,7 @@ const getOutstandingAmountByClient = async (req, res) => {
       .json({ error: "An internal server error occurred." });
   }
 };
+
 // Get bills by payment status
 const getBillsByPaymentStatus = async (req, res) => {
   const { status } = req.params;
@@ -294,6 +300,7 @@ const getBillsByPaymentStatus = async (req, res) => {
       .json({ error: "An internal server error occurred." });
   }
 };
+
 // Get bills by client
 const getBillsByClient = async (req, res) => {
   const { clientId } = req.params;
@@ -313,13 +320,13 @@ const getBillsByClient = async (req, res) => {
       .json({ error: "An internal server error occurred." });
   }
 };
+
 // Get overdue bills
 const getOverdueBills = async (req, res) => {
   try {
-    const today = new Date();
     const overdueBills = await Bill.find({
-      dueDate: { $lt: today },
-      paymentStatus: { $ne: "paid" },
+      dueDate: { $lt: new Date() },
+      paymentStatus: "pending",
     }).populate("clientId shipmentId");
 
     return res.status(200).json(overdueBills);
@@ -330,24 +337,24 @@ const getOverdueBills = async (req, res) => {
       .json({ error: "An internal server error occurred." });
   }
 };
-
-// Mark a bill as paid
 const markBillAsPaid = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const updatedBill = await Bill.findByIdAndUpdate(
-      id,
+    const updatedBill = await Bill.findOneAndUpdate(
+      { billId: id },
       { paymentStatus: "paid", paymentDate: new Date() },
-      { new: true },
+      { new: true, runValidators: true }, // Ensures validations are run on the update
     ).populate("clientId shipmentId");
 
+    // Check if the bill was found
     if (!updatedBill) {
       return res.status(404).json({ error: "Bill not found." });
     }
 
+    // Return success response with updated bill details
     return res.status(200).json({
-      message: "Bill marked as paid.",
+      message: "Bill marked as paid successfully.",
       bill: updatedBill,
     });
   } catch (error) {
@@ -357,7 +364,6 @@ const markBillAsPaid = async (req, res) => {
       .json({ error: "An internal server error occurred." });
   }
 };
-
 // Export all controller functions
 module.exports = {
   createBill,
@@ -366,9 +372,9 @@ module.exports = {
   updateBill,
   deleteBill,
   updatePaymentStatus,
-  getOverdueBills,
-  getBillsByClient,
-  getBillsByPaymentStatus,
   getOutstandingAmountByClient,
+  getBillsByPaymentStatus,
+  getBillsByClient,
+  getOverdueBills,
   markBillAsPaid,
 };

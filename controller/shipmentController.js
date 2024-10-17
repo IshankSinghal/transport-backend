@@ -2,6 +2,8 @@
 
 const Shipment = require("../models/Shipment");
 const { body, validationResult } = require("express-validator");
+const Truck = require("../models/Truck");
+const Driver = require("../models/Driver");
 
 // Create a new shipment
 const createShipment = async (req, res) => {
@@ -102,8 +104,23 @@ const createShipment = async (req, res) => {
 // Get all shipments
 const getAllShipments = async (req, res) => {
   try {
-    const shipments = await Shipment.find().populate("truckId driverId").exec();
-    return res.status(200).json(shipments);
+    const shipments = await Shipment.find().exec();
+
+    const populatedShipments = await Promise.all(
+      shipments.map(async (shipment) => {
+        const truck = await Truck.findOne({ truckId: shipment.truckId });
+
+        const driver = await Driver.findOne({ driverId: shipment.driverId });
+
+        return {
+          ...shipment.toObject(),
+          truck,
+          driver,
+        };
+      }),
+    );
+
+    return res.status(200).json(populatedShipments);
   } catch (error) {
     console.error("Error retrieving shipments:", error);
     return res
@@ -114,16 +131,23 @@ const getAllShipments = async (req, res) => {
 
 // Get a shipment by ID
 const getShipmentById = async (req, res) => {
-  const { id } = req.params;
-
+  const { shipmentId } = req.params;
+  console.log(shipmentId);
   try {
-    const shipment = await Shipment.findById(id)
-      .populate("truckId driverId")
-      .exec();
+    const shipment = await Shipment.findOne({ shipmentId: shipmentId }).exec();
+
     if (!shipment) {
       return res.status(404).json({ error: "Shipment not found." });
     }
-    return res.status(200).json(shipment);
+
+    const truck = await Truck.findOne({ truckId: shipment.truckId });
+    const driver = await Driver.findOne({ driverId: shipment.driverId });
+
+    return res.status(200).json({
+      ...shipment.toObject(),
+      truck,
+      driver,
+    });
   } catch (error) {
     console.error("Error retrieving shipment:", error);
     return res
@@ -134,7 +158,7 @@ const getShipmentById = async (req, res) => {
 
 // Update a shipment
 const updateShipment = async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.shipmentId;
 
   // Validate request body
   await body("pickupLocation")
@@ -202,7 +226,7 @@ const updateShipment = async (req, res) => {
 
 // Delete a shipment
 const deleteShipment = async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.shipmentId;
 
   try {
     const deletedShipment = await Shipment.findByIdAndDelete(id);
