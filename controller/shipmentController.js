@@ -72,6 +72,25 @@ const createShipment = async (req, res) => {
   } = req.body;
 
   try {
+    if (truckId) {
+      const truckExist = await Truck.findOne({ truckId }); // Assuming the Truck model is used to store trucks
+      if (!truckExist) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Truck ID. Truck does not exist.",
+        });
+      }
+    }
+    if (driverId) {
+      const driverExist = await Driver.findOne({ driverId }); // Assuming the Truck model is used to store trucks
+      if (!driverExist) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Driver ID. Driver does not exist.",
+        });
+      }
+    }
+
     const shipment = new Shipment({
       shipmentId: 0,
       clientId,
