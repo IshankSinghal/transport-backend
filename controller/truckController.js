@@ -1,4 +1,5 @@
 const Truck = require("../models/Truck"); // Adjust the path as needed
+const Shipment = require("../models/Shipment");
 const { body, validationResult, param } = require("express-validator");
 
 // Create a new truck
@@ -106,8 +107,32 @@ const createTruck = async (req, res) => {
 
 const getAllTrucks = async (req, res) => {
   try {
+    // Fetch all trucks
     const trucks = await Truck.find();
-    return res.status(200).json({ trucks });
+
+    // Iterate through trucks and find the associated shipment for each truck
+    const trucksWithShipments = await Promise.all(
+      trucks.map(async (truck) => {
+        const shipment = await Shipment.findOne({
+          truckId: truck.truckId,
+        }).select(
+          "pickupLocation deliveryLocation cargoType cargoWeight departureDate arrivalDate",
+        );
+
+        // Convert truck to plain object
+        const truckObject = truck.toObject();
+
+        // Remove 'createdAt' and 'updatedAt' from the truck object
+        delete truckObject.createdAt;
+        delete truckObject.updatedAt;
+
+        // Merge shipment details if they exist
+        return { ...truckObject, ...shipment?.toObject() };
+      }),
+    );
+
+    // Return trucks with associated shipment details merged into the truck object
+    return res.status(200).json({ trucks: trucksWithShipments });
   } catch (error) {
     console.error("Error fetching trucks:", error);
     return res
