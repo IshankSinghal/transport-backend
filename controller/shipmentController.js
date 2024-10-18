@@ -73,27 +73,42 @@ const createShipment = async (req, res) => {
   } = req.body;
 
   try {
+    // Check if truck exists and is available
     if (truckId) {
-      const truckExist = await Truck.findOne({ truckId }); // Assuming the Truck model is used to store trucks
-      if (!truckExist) {
+      const truck = await Truck.findOne({ truckId });
+      if (!truck) {
         return res.status(400).json({
           success: false,
           message: "Invalid Truck ID. Truck does not exist.",
         });
+      } else if (truck.availabilityStatus !== "Available") {
+        return res.status(400).json({
+          success: false,
+          message: "Truck is not available.",
+        });
       }
     }
+
+    // Check if driver exists and is available
     if (driverId) {
-      const driverExist = await Driver.findOne({ driverId }); // Assuming the Truck model is used to store trucks
-      if (!driverExist) {
+      const driver = await Driver.findOne({ driverId });
+      if (!driver) {
         return res.status(400).json({
           success: false,
           message: "Invalid Driver ID. Driver does not exist.",
         });
+      } else if (driver.availabilityStatus !== "Available") {
+        return res.status(400).json({
+          success: false,
+          message: "Driver is not available.",
+        });
       }
     }
+
+    // Check if client exists
     if (clientId) {
-      const clientExist = await Client.findOne({ clientId });
-      if (!clientExist) {
+      const client = await Client.findOne({ clientId });
+      if (!client) {
         return res.status(400).json({
           success: false,
           message: "Invalid Client ID. Client does not exist.",
@@ -101,8 +116,9 @@ const createShipment = async (req, res) => {
       }
     }
 
+    // Create a new shipment
     const shipment = new Shipment({
-      shipmentId: 0,
+      shipmentId: 0, // You can generate a shipment ID dynamically if needed
       clientId,
       pickupLocation,
       deliveryLocation,
@@ -117,6 +133,24 @@ const createShipment = async (req, res) => {
     });
 
     await shipment.save();
+
+    // Set truck's availability to 'Not Available'
+    if (truckId) {
+      await Truck.updateOne(
+        { truckId },
+        { $set: { availabilityStatus: "Not Available" } },
+      );
+    }
+
+    // Set driver's availability to 'Not Available'
+    if (driverId) {
+      await Driver.updateOne(
+        { driverId },
+        {
+          $set: { availabilityStatus: "Not Available", assignedTruck: truckId },
+        },
+      );
+    }
 
     return res.status(201).json({
       message: "Shipment created successfully.",

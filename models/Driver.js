@@ -38,7 +38,7 @@ const driverSchema = new Schema(
       default: "Available",
     },
     assignedTruck: {
-      type: Schema.Types.ObjectId, // ObjectId reference to Truck model
+      type: Number, // ObjectId reference to Truck model
       ref: "Truck",
     },
   },
