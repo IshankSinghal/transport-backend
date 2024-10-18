@@ -23,11 +23,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 
-app.use("/api/auth", authRoute); // WORKING
-app.use("/api/client", clientRouter); // WORKING
+app.use("/api/auth", authRoute);
+app.use("/api/client", clientRouter);
 app.use("/api/shipment", shipmentRoutes);
 app.use("/api/truck", truckRouter);
-app.use("/api/driver", driverRouter); // WORKING
+app.use("/api/driver", driverRouter);
 app.use("/api/billing", billingRouter);
 app.get("/", (req, res) => {
   res.send(`

@@ -4,6 +4,7 @@ const Shipment = require("../models/Shipment");
 const { body, validationResult } = require("express-validator");
 const Truck = require("../models/Truck");
 const Driver = require("../models/Driver");
+const Client = require("../models/Client");
 
 // Create a new shipment
 const createShipment = async (req, res) => {
@@ -90,6 +91,15 @@ const createShipment = async (req, res) => {
         });
       }
     }
+    if (clientId) {
+      const clientExist = await Client.findOne({ clientId });
+      if (!clientExist) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Client ID. Client does not exist.",
+        });
+      }
+    }
 
     const shipment = new Shipment({
       shipmentId: 0,
@@ -151,7 +161,6 @@ const getAllShipments = async (req, res) => {
 // Get a shipment by ID
 const getShipmentById = async (req, res) => {
   const { shipmentId } = req.params;
-  console.log(shipmentId);
   try {
     const shipment = await Shipment.findOne({ shipmentId: shipmentId }).exec();
 

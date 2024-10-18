@@ -20,7 +20,7 @@ router.post("/", createBill);
 
 router.get("/", getAllBills);
 
-router.get("/:id", getBillById);
+router.get("/:billId", getBillById);
 
 router.put("/:id", updateBill);
 
