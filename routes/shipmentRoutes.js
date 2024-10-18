@@ -12,7 +12,7 @@ const {
 const { authMiddleware } = require("../middleware/authMiddleware");
 
 // Create a new shipment
-router.post("/create", createShipment);
+router.post("/", createShipment);
 
 //Get All Shipments
 router.get("/", getAllShipments);
