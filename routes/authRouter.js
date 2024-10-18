@@ -6,7 +6,8 @@ const loginLimiter = require("../middleware/limiter");
 const router = express.Router();
 
 router.post("/signup", signup);
+//add limiter
 
-router.post("/signin", loginLimiter, signin);
+router.post("/signin", signin);
 
 module.exports = router;
