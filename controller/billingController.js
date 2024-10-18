@@ -2,17 +2,19 @@
 
 const Bill = require("../models/Billing");
 const { body, validationResult } = require("express-validator");
+const Client = require("../models/Client");
+const Shipment = require("../models/Shipment");
 
 // Create a new bill
 const createBill = async (req, res) => {
   // Validate request body using express-validator
   await Promise.all([
     body("clientId")
-      .isMongoId()
+      .isNumeric()
       .withMessage("Client ID must be a valid MongoDB ObjectId.")
       .run(req),
     body("shipmentId")
-      .isMongoId()
+      .isNumeric()
       .withMessage("Shipment ID must be a valid MongoDB ObjectId.")
       .run(req),
     body("dueDate")
@@ -61,7 +63,27 @@ const createBill = async (req, res) => {
   } = req.body;
 
   try {
+    if (clientId) {
+      const clientExist = await Client.findOne({ clientId });
+      if (!clientExist) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Client ID. Client does not exist.",
+        });
+      }
+    }
+    if (shipmentId) {
+      const shipmentExist = await Shipment.findOne({ shipmentId });
+      if (!shipmentExist) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Shipment ID. Shipment does not exist.",
+        });
+      }
+    }
+
     const bill = new Bill({
+      billId: 0,
       clientId,
       shipmentId,
       dueDate,
@@ -93,8 +115,25 @@ const createBill = async (req, res) => {
 // Get all bills
 const getAllBills = async (req, res) => {
   try {
-    const bills = await Bill.find().populate("clientId shipmentId").exec();
-    return res.status(200).json(bills);
+    const bills = await Bill.find().exec();
+
+    const populatedBills = await Promise.all(
+      bills.map(async (bill) => {
+        const client = await Client.findOne({ clientId: bill.clientId });
+
+        const shipment = await Shipment.findOne({
+          shipmentId: bill.shipmentId,
+        });
+
+        return {
+          ...bill.toObject(),
+          client,
+          shipment,
+        };
+      }),
+    );
+
+    return res.status(200).json(populatedBills);
   } catch (error) {
     console.error("Error retrieving bills:", error);
     return res
@@ -105,14 +144,22 @@ const getAllBills = async (req, res) => {
 
 // Get a bill by ID
 const getBillById = async (req, res) => {
-  const { id } = req.params;
+  const { billId } = req.params;
 
   try {
-    const bill = await Bill.findById(id).populate("clientId shipmentId").exec();
+    const bill = await Bill.findOne({ billId: billId }).exec();
     if (!bill) {
       return res.status(404).json({ error: "Bill not found." });
     }
-    return res.status(200).json(bill);
+
+    const client = await Client.findOne({ clientId: bill.clientId });
+    const shipment = await Shipment.findOne({ shipmentId: bill.shipmentId });
+
+    return res.status(200).json({
+      ...bill.toObject(),
+      client,
+      shipment,
+    });
   } catch (error) {
     console.error("Error retrieving bill:", error);
     return res
@@ -163,10 +210,14 @@ const updateBill = async (req, res) => {
   }
 
   try {
-    const updatedBill = await Bill.findByIdAndUpdate(id, req.body, {
+    const updatedBill = await Bill.findOneAndUpdate({ billId: id }, req.body, {
       new: true,
       runValidators: true,
-    }).populate("clientId shipmentId");
+    });
+    const client = await Client.findOne({ clientId: updateBill.clientId });
+    const shipment = await Shipment.findOne({
+      shipmentId: updateBill.shipmentId,
+    });
 
     if (!updatedBill) {
       return res.status(404).json({ error: "Bill not found." });
@@ -174,7 +225,9 @@ const updateBill = async (req, res) => {
 
     return res.status(200).json({
       message: "Bill updated successfully.",
-      bill: updatedBill,
+      ...updatedBill.toObject(),
+      client,
+      shipment,
     });
   } catch (error) {
     console.error("Error updating bill:", error);
@@ -189,7 +242,7 @@ const deleteBill = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedBill = await Bill.findByIdAndDelete(id);
+    const deletedBill = await Bill.findOneAndDelete({ billId: id });
 
     if (!deletedBill) {
       return res.status(404).json({ error: "Bill not found." });

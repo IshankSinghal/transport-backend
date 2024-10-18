@@ -7,7 +7,6 @@ const billSchema = new mongoose.Schema(
       type: Number,
       required: true,
       unique: true,
-      index: true,
     },
     clientId: {
       type: Number,
