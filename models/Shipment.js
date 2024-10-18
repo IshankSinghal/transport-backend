@@ -8,7 +8,6 @@ const shipmentSchema = new mongoose.Schema(
       type: Number,
       required: true,
       unique: true, // Ensures that the Shipment ID is unique
-      index: true, // Creates an index for fast searching
     },
     clientId: {
       type: Number,

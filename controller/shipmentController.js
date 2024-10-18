@@ -203,10 +203,17 @@ const updateShipment = async (req, res) => {
   }
 
   try {
-    const updatedShipment = await Shipment.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    }).populate("truckId driverId");
+    const updatedShipment = await Shipment.findOneAndUpdate(
+      { shipmentId: id },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    const truck = await Truck.findOne({ truckId: updatedShipment.truckId });
+    const driver = await Driver.findOne({ driverId: updatedShipment.driverId });
 
     if (!updatedShipment) {
       return res.status(404).json({ error: "Shipment not found." });
@@ -214,7 +221,9 @@ const updateShipment = async (req, res) => {
 
     return res.status(200).json({
       message: "Shipment updated successfully.",
-      shipment: updatedShipment,
+      ...updatedShipment.toObject(),
+      truck,
+      driver,
     });
   } catch (error) {
     console.error("Error updating shipment:", error);
@@ -229,7 +238,7 @@ const deleteShipment = async (req, res) => {
   const id = req.params.shipmentId;
 
   try {
-    const deletedShipment = await Shipment.findByIdAndDelete(id);
+    const deletedShipment = await Shipment.findOneAndDelete({ shipmentId: id });
 
     if (!deletedShipment) {
       return res.status(404).json({ error: "Shipment not found." });

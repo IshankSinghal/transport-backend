@@ -29,8 +29,8 @@ const createDriver = async (req, res) => {
     .run(req);
   await body("experience")
     .optional()
-    .isInt({ min: 0 })
-    .withMessage("Experience must be a non-negative integer.")
+    .isString()
+    .withMessage("Experience must be a stringa.")
     .run(req);
   await body("availabilityStatus")
     .optional()
@@ -41,6 +41,7 @@ const createDriver = async (req, res) => {
     .run(req);
   await body("assignedTruck")
     .optional()
+    .isNumeric()
     .withMessage("Assigned truck must be a valid MongoDB ObjectId.")
     .run(req);
 
@@ -70,6 +71,7 @@ const createDriver = async (req, res) => {
     }
 
     const driver = new Driver({
+      driverId: 0,
       name,
       licenseNumber,
       phoneNumber,
