@@ -16,7 +16,6 @@ const driverSchema = new Schema(
     licenseNumber: {
       type: String,
       required: true,
-      unique: true,
     },
     phoneNumber: {
       type: Number,
@@ -29,6 +28,9 @@ const driverSchema = new Schema(
     salary: {
       type: Number,
       required: true,
+    },
+    experience: {
+      type: Number,
     },
     availabilityStatus: {
       type: String,

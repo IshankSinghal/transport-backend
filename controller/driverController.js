@@ -1,5 +1,5 @@
 const { body, param, validationResult } = require("express-validator");
-const Driver = require("../models/Driver"); // Adjust the path as necessary
+const Driver = require("../models/Driver");
 
 // Create a new driver
 const createDriver = async (req, res) => {
@@ -16,7 +16,6 @@ const createDriver = async (req, res) => {
   await body("phoneNumber")
     .isNumeric()
     .notEmpty()
-    .isMobilePhone()
     .withMessage("Phone number is required.")
     .run(req);
   await body("address")
@@ -28,6 +27,11 @@ const createDriver = async (req, res) => {
     .isFloat({ gt: 0 })
     .withMessage("Salary must be a positive number.")
     .run(req);
+  await body("experience")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("Experience must be a non-negative integer.")
+    .run(req);
   await body("availabilityStatus")
     .optional()
     .isIn(["Available", "Not Available"])
@@ -37,8 +41,7 @@ const createDriver = async (req, res) => {
     .run(req);
   await body("assignedTruck")
     .optional()
-    .isInt()
-    .withMessage("Assigned truck must be a valid number.")
+    .withMessage("Assigned truck must be a valid MongoDB ObjectId.")
     .run(req);
 
   const errors = validationResult(req);
@@ -51,14 +54,14 @@ const createDriver = async (req, res) => {
     licenseNumber,
     phoneNumber,
     address,
+    salary,
+    experience,
     availabilityStatus,
     assignedTruck,
-    salary,
   } = req.body;
 
   try {
     const exist = await Driver.findOne({ licenseNumber: licenseNumber });
-    console.log(exist);
     if (exist) {
       return res.status(400).json({
         success: false,
@@ -67,17 +70,16 @@ const createDriver = async (req, res) => {
     }
 
     const driver = new Driver({
-      driverId: 0,
       name,
       licenseNumber,
       phoneNumber,
       address,
+      salary,
+      experience,
       availabilityStatus,
       assignedTruck,
-      salary,
     });
 
-    // Save the driver to the database
     await driver.save();
 
     return res.status(201).json({
@@ -88,9 +90,10 @@ const createDriver = async (req, res) => {
         licenseNumber: driver.licenseNumber,
         phoneNumber: driver.phoneNumber,
         address: driver.address,
+        salary: driver.salary,
+        experience: driver.experience,
         availabilityStatus: driver.availabilityStatus,
         assignedTruck: driver.assignedTruck,
-        salary: driver.salary,
         createdAt: driver.createdAt,
       },
     });
@@ -105,8 +108,8 @@ const createDriver = async (req, res) => {
 // Get a driver by ID
 const getDriverById = async (req, res) => {
   await param("driverId")
-    .isNumeric()
-    .withMessage("Driver ID must be a valid ID.")
+    .isInt()
+    .withMessage("Driver ID must be a valid integer.")
     .run(req);
 
   const errors = validationResult(req);
@@ -117,7 +120,7 @@ const getDriverById = async (req, res) => {
   const { driverId } = req.params;
 
   try {
-    const driver = await Driver.findOne({ driverId });
+    const driver = await Driver.findOne({ driverId }).populate("assignedTruck");
     if (!driver) {
       return res.status(404).json({ error: "Driver not found." });
     }
@@ -134,8 +137,8 @@ const getDriverById = async (req, res) => {
 // Update a driver by ID
 const updateDriverById = async (req, res) => {
   await param("driverId")
-    .isNumeric()
-    .withMessage("Driver ID must be a valid ID.")
+    .isInt()
+    .withMessage("Driver ID must be a valid integer.")
     .run(req);
   await body("name")
     .optional()
@@ -149,8 +152,8 @@ const updateDriverById = async (req, res) => {
     .run(req);
   await body("phoneNumber")
     .optional()
-    .isString()
-    .withMessage("Phone number must be a string.")
+    .isNumeric()
+    .withMessage("Phone number must be a number.")
     .run(req);
   await body("address")
     .optional()
@@ -162,6 +165,11 @@ const updateDriverById = async (req, res) => {
     .isFloat({ gt: 0 })
     .withMessage("Salary must be a positive number.")
     .run(req);
+  await body("experience")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("Experience must be a non-negative integer.")
+    .run(req);
   await body("availabilityStatus")
     .optional()
     .isIn(["Available", "Not Available"])
@@ -171,8 +179,8 @@ const updateDriverById = async (req, res) => {
     .run(req);
   await body("assignedTruck")
     .optional()
-    .isInt()
-    .withMessage("Assigned truck must be a valid number.")
+    .isMongoId()
+    .withMessage("Assigned truck must be a valid MongoDB ObjectId.")
     .run(req);
 
   const errors = validationResult(req);
@@ -187,7 +195,7 @@ const updateDriverById = async (req, res) => {
     const driver = await Driver.findOneAndUpdate({ driverId }, updateData, {
       new: true,
       runValidators: true,
-    });
+    }).populate("assignedTruck");
     if (!driver) {
       return res.status(404).json({ error: "Driver not found." });
     }
@@ -207,8 +215,8 @@ const updateDriverById = async (req, res) => {
 // Delete a driver by ID
 const deleteDriverById = async (req, res) => {
   await param("driverId")
-    .isNumeric()
-    .withMessage("Driver ID must be a valid ID.")
+    .isInt()
+    .withMessage("Driver ID must be a valid integer.")
     .run(req);
 
   const errors = validationResult(req);
@@ -236,7 +244,7 @@ const deleteDriverById = async (req, res) => {
 // Get all drivers
 const getAllDrivers = async (req, res) => {
   try {
-    const drivers = await Driver.find();
+    const drivers = await Driver.find().populate("assignedTruck");
     return res.status(200).json(drivers);
   } catch (error) {
     console.error("Error fetching drivers:", error);
@@ -251,7 +259,7 @@ const getAvailableDrivers = async (req, res) => {
   try {
     const availableDrivers = await Driver.find({
       availabilityStatus: "Available",
-    });
+    }).populate("assignedTruck");
     return res.status(200).json(availableDrivers);
   } catch (error) {
     console.error("Error fetching available drivers:", error);
