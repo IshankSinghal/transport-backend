@@ -177,6 +177,7 @@ const updateTruckById = async (req, res) => {
     .withMessage("Truck ID must be a string.")
     .run(req);
   await body("registrationNumber")
+    .optional()
     .isString()
     .withMessage("Registration number must be a string.")
     .run(req);
