@@ -9,6 +9,10 @@ const shipmentSchema = new mongoose.Schema(
       required: true,
       unique: true, // Ensures that the Shipment ID is unique
     },
+    shipmentName: {
+      type: String,
+      required: true,
+    },
     clientId: {
       type: Number,
       required: true,

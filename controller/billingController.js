@@ -120,15 +120,17 @@ const getAllBills = async (req, res) => {
     const populatedBills = await Promise.all(
       bills.map(async (bill) => {
         const client = await Client.findOne({ clientId: bill.clientId });
+        const clientName = client.clientName;
 
         const shipment = await Shipment.findOne({
           shipmentId: bill.shipmentId,
         });
+        const shipmentName = shipment.shipmentName;
 
         return {
           ...bill.toObject(),
-          client,
-          shipment,
+          clientName,
+          shipmentName,
         };
       }),
     );
@@ -153,12 +155,14 @@ const getBillById = async (req, res) => {
     }
 
     const client = await Client.findOne({ clientId: bill.clientId });
-    const shipment = await Shipment.findOne({ shipmentId: bill.shipmentId });
+    const clientName = client.clientName;
 
+    const shipment = await Shipment.findOne({ shipmentId: bill.shipmentId });
+    const shipmentName = shipment.shipmentName;
     return res.status(200).json({
       ...bill.toObject(),
-      client,
-      shipment,
+      clientName,
+      shipmentName,
     });
   } catch (error) {
     console.error("Error retrieving bill:", error);
@@ -195,6 +199,13 @@ const updateBill = async (req, res) => {
       .isFloat({ gt: 0 })
       .withMessage("Total amount must be a positive number.")
       .run(req),
+    body("paymentStatus")
+      .optional()
+      .isIn(["pending", "paid", "overdue"])
+      .withMessage(
+        "Payment status must be either 'pending', 'paid', or 'overdue'.",
+      )
+      .run(req),
     body("paymentMethod")
       .optional()
       .isIn(["card", "bank transfer", "cash"])
@@ -214,10 +225,12 @@ const updateBill = async (req, res) => {
       new: true,
       runValidators: true,
     });
-    const client = await Client.findOne({ clientId: updateBill.clientId });
+    const client = await Client.findOne({ clientId: updatedBill.clientId });
+    const clientName = client.clientName;
     const shipment = await Shipment.findOne({
-      shipmentId: updateBill.shipmentId,
+      shipmentId: updatedBill.shipmentId,
     });
+    const shipmentName = shipment.shipmentName;
 
     if (!updatedBill) {
       return res.status(404).json({ error: "Bill not found." });
@@ -226,8 +239,8 @@ const updateBill = async (req, res) => {
     return res.status(200).json({
       message: "Bill updated successfully.",
       ...updatedBill.toObject(),
-      client,
-      shipment,
+      clientName,
+      shipmentName,
     });
   } catch (error) {
     console.error("Error updating bill:", error);
