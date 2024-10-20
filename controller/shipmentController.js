@@ -13,6 +13,10 @@ const createShipment = async (req, res) => {
     .isNumeric()
     .withMessage("Client ID must be an integer.")
     .run(req);
+  await body("shipmentName")
+    .isString()
+    .withMessage("Shipment Name is required.")
+    .run(req);
   await body("pickupLocation")
     .isString()
     .notEmpty()
@@ -59,6 +63,7 @@ const createShipment = async (req, res) => {
   }
 
   const {
+    shipmentName,
     clientId,
     pickupLocation,
     deliveryLocation,
@@ -119,6 +124,7 @@ const createShipment = async (req, res) => {
     // Create a new shipment
     const shipment = new Shipment({
       shipmentId: 0, // You can generate a shipment ID dynamically if needed
+      shipmentName,
       clientId,
       pickupLocation,
       deliveryLocation,
@@ -223,6 +229,12 @@ const updateShipment = async (req, res) => {
   const id = req.params.shipmentId;
 
   // Validate request body
+  await body("shipmentName")
+    .optional()
+    .isString()
+    .notEmpty()
+    .withMessage("Shipment Name must be a non-empty string.")
+    .run(req);
   await body("pickupLocation")
     .optional()
     .isString()
