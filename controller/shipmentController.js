@@ -180,11 +180,14 @@ const getAllShipments = async (req, res) => {
         const truck = await Truck.findOne({ truckId: shipment.truckId });
 
         const driver = await Driver.findOne({ driverId: shipment.driverId });
+        const client = await Client.findOne({ clientId: shipment.clientId });
+        const clientName = client.clientName;
 
         return {
           ...shipment.toObject(),
           truck,
           driver,
+          clientName,
         };
       }),
     );
