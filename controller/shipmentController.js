@@ -13,6 +13,11 @@ const createShipment = async (req, res) => {
     .isNumeric()
     .withMessage("Client ID must be an integer.")
     .run(req);
+  await body("clientName")
+    .isString()
+    .optional()
+    .withMessage("Client Name must be a valid String.")
+    .run(req);
   await body("shipmentName")
     .isString()
     .withMessage("Shipment Name is required.")
@@ -112,13 +117,15 @@ const createShipment = async (req, res) => {
 
     // Check if client exists
     if (clientId) {
-      const client = await Client.findOne({ clientId });
-      if (!client) {
+      const clientExist = await Client.findOne({ clientId });
+      if (!clientExist) {
         return res.status(400).json({
           success: false,
           message: "Invalid Client ID. Client does not exist.",
         });
       }
+
+      clientName = clientExist.clientName;
     }
 
     // Create a new shipment
@@ -126,6 +133,7 @@ const createShipment = async (req, res) => {
       shipmentId: 0, // You can generate a shipment ID dynamically if needed
       shipmentName,
       clientId,
+      clientName,
       pickupLocation,
       deliveryLocation,
       cargoType,
@@ -179,12 +187,19 @@ const getAllShipments = async (req, res) => {
       shipments.map(async (shipment) => {
         const truck = await Truck.findOne({ truckId: shipment.truckId });
 
-        const driver = await Driver.findOne({ driverId: shipment.driverId });
+        const driver = await Driver.findOne({
+          driverId: shipment.driverId,
+        });
+        const client = await Client.findOne({
+          clientId: shipment.clientId,
+        });
+        const clientName = client.clientName;
 
         return {
           ...shipment.toObject(),
           truck,
           driver,
+          clientName,
         };
       }),
     );
@@ -210,11 +225,14 @@ const getShipmentById = async (req, res) => {
 
     const truck = await Truck.findOne({ truckId: shipment.truckId });
     const driver = await Driver.findOne({ driverId: shipment.driverId });
+    const client = await Client.findOne({ clientId: shipment.clientId });
+    const clientName = client.clientName;
 
     return res.status(200).json({
       ...shipment.toObject(),
       truck,
       driver,
+      clientName,
     });
   } catch (error) {
     console.error("Error retrieving shipment:", error);

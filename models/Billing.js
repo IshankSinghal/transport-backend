@@ -13,6 +13,11 @@ const billSchema = new mongoose.Schema(
       ref: "Client",
       required: true,
     },
+    clientName: {
+      type: String,
+      // ref: "Client",
+      required: true,
+    },
     shipmentId: {
       type: Number,
       ref: "Shipment",
@@ -34,12 +39,12 @@ const billSchema = new mongoose.Schema(
     },
     taxAmount: {
       type: Number,
-      required: true,
+      required: false,
       min: 0,
     },
     totalAmount: {
       type: Number,
-      required: true,
+      required: false,
       min: 0,
     },
     paymentStatus: {

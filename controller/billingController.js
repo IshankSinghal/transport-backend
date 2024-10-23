@@ -13,6 +13,11 @@ const createBill = async (req, res) => {
       .isNumeric()
       .withMessage("Client ID must be a valid MongoDB ObjectId.")
       .run(req),
+    body("clientName")
+      .optional() // We'll fetch it from the Client collection if missing
+      .isString()
+      .withMessage("Client Name must be a valid String.")
+      .run(req),
     body("shipmentId")
       .isNumeric()
       .withMessage("Shipment ID must be a valid MongoDB ObjectId.")
@@ -27,10 +32,12 @@ const createBill = async (req, res) => {
       .withMessage("Amount must be a positive number.")
       .run(req),
     body("taxAmount")
+      .optional()
       .isFloat({ gt: 0 })
       .withMessage("Tax amount must be a positive number.")
       .run(req),
     body("totalAmount")
+      .optional()
       .isFloat({ gt: 0 })
       .withMessage("Total amount must be a positive number.")
       .run(req),
@@ -63,6 +70,7 @@ const createBill = async (req, res) => {
   } = req.body;
 
   try {
+    let clientName;
     if (clientId) {
       const clientExist = await Client.findOne({ clientId });
       if (!clientExist) {
@@ -71,6 +79,7 @@ const createBill = async (req, res) => {
           message: "Invalid Client ID. Client does not exist.",
         });
       }
+      clientName = clientExist.clientName;
     }
     if (shipmentId) {
       const shipmentExist = await Shipment.findOne({ shipmentId });
@@ -85,6 +94,7 @@ const createBill = async (req, res) => {
     const bill = new Bill({
       billId: 0,
       clientId,
+      clientName,
       shipmentId,
       dueDate,
       amount,
@@ -103,6 +113,7 @@ const createBill = async (req, res) => {
     return res.status(201).json({
       message: "Bill created successfully.",
       bill,
+      clientName,
     });
   } catch (error) {
     console.error("Error creating bill:", error);
