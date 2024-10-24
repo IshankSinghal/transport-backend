@@ -9,7 +9,7 @@ const shipmentRoutes = require("./routes/shipmentRoutes");
 const truckRouter = require("./routes/truckRouter");
 const driverRouter = require("./routes/driverRouter");
 const billingRouter = require("./routes/billingRouter");
-
+const dashboardRouter = require("./routes/dashboardRouter");
 const authRoute = require("./routes/authRouter");
 const Bill = require("./models/Billing");
 
@@ -29,6 +29,7 @@ app.use("/api/shipment", shipmentRoutes);
 app.use("/api/truck", truckRouter);
 app.use("/api/driver", driverRouter);
 app.use("/api/billing", billingRouter);
+app.use("/api/dashboard", dashboardRouter);
 app.get("/", (req, res) => {
   res.send(`
         <!DOCTYPE html>
