@@ -31,7 +31,7 @@ const createDriver = async (req, res) => {
   await body("experience")
     .optional()
     .isString()
-    .withMessage("Experience must be a stringa.")
+    .withMessage("Experience must be a string.")
     .run(req);
   await body("availabilityStatus")
     .optional()
@@ -123,12 +123,13 @@ const getDriverById = async (req, res) => {
   const { driverId } = req.params;
 
   try {
-    const driver = await Driver.findOne({ driverId }).populate("assignedTruck");
+    const driver = await Driver.findOne({ driverId });
+    const truck = await Truck.findOne({ truckId: driver.assignedTruck });
     if (!driver) {
       return res.status(404).json({ error: "Driver not found." });
     }
 
-    return res.status(200).json(driver);
+    return res.status(200).json({ ...driver.toObject(), truck });
   } catch (error) {
     console.error("Error fetching driver:", error);
     return res
@@ -198,14 +199,19 @@ const updateDriverById = async (req, res) => {
     const driver = await Driver.findOneAndUpdate({ driverId }, updateData, {
       new: true,
       runValidators: true,
-    }).populate("assignedTruck");
+    });
+    const assignedTruck = await Truck.findOne({
+      truckId: driver.assignedTruck,
+    });
+
     if (!driver) {
       return res.status(404).json({ error: "Driver not found." });
     }
 
     return res.status(200).json({
+      ...driver.toObject(),
+      assignedTruck,
       message: "Driver updated successfully.",
-      driver,
     });
   } catch (error) {
     console.error("Error updating driver:", error);
@@ -276,8 +282,19 @@ const getAvailableDrivers = async (req, res) => {
   try {
     const availableDrivers = await Driver.find({
       availabilityStatus: "Available",
-    }).populate("assignedTruck");
-    return res.status(200).json(availableDrivers);
+    });
+    const driversWithTrucks = await Promise.all(
+      availableDrivers.map(async (driver) => {
+        const assignedTruck = await Truck.findOne({
+          truckId: driver.assignedTruck,
+        });
+        return {
+          ...driver.toObject(), // Convert driver document to plain JS object
+          assignedTruck, // Add assignedTruck details to the driver object
+        };
+      }),
+    );
+    return res.status(200).json(driversWithTrucks);
   } catch (error) {
     console.error("Error fetching available drivers:", error);
     return res
