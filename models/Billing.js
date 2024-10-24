@@ -65,6 +65,8 @@ const billSchema = new mongoose.Schema(
       required: false,
     },
     fuelCost: {
+      // change this to driver cost
+
       type: Number,
       required: false,
     },

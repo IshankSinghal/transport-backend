@@ -1,5 +1,6 @@
 const { body, param, validationResult } = require("express-validator");
 const Driver = require("../models/Driver");
+const Truck = require("../models/Truck");
 
 // Create a new driver
 const createDriver = async (req, res) => {
@@ -246,8 +247,22 @@ const deleteDriverById = async (req, res) => {
 // Get all drivers
 const getAllDrivers = async (req, res) => {
   try {
-    const drivers = await Driver.find().populate("assignedTruck");
-    return res.status(200).json(drivers);
+    const drivers = await Driver.find(); // Fetch all drivers
+
+    // Fetch assigned trucks for each driver
+    const driversWithTrucks = await Promise.all(
+      drivers.map(async (driver) => {
+        const assignedTruck = await Truck.findOne({
+          truckId: driver.assignedTruck,
+        });
+        return {
+          ...driver.toObject(), // Convert driver document to plain JS object
+          assignedTruck, // Add assignedTruck details to the driver object
+        };
+      }),
+    );
+
+    return res.status(200).json(driversWithTrucks);
   } catch (error) {
     console.error("Error fetching drivers:", error);
     return res
