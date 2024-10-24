@@ -28,10 +28,12 @@ const createBill = async (req, res) => {
       .run(req),
     body("taxAmount")
       .isFloat({ gt: 0 })
+      .optional()
       .withMessage("Tax amount must be a positive number.")
       .run(req),
     body("totalAmount")
       .isFloat({ gt: 0 })
+      .optional()
       .withMessage("Total amount must be a positive number.")
       .run(req),
     body("paymentMethod")
