@@ -273,6 +273,11 @@ const updateShipment = async (req, res) => {
     .toDate()
     .withMessage("Arrival date must be a valid date.")
     .run(req);
+  await body("status")
+    .isIn(["pending", "delivered", "cancelled"])
+    .optional()
+    .withMessage("Status must be 'pending', 'delivered', or 'cancelled'.")
+    .run(req);
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
