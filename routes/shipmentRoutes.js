@@ -12,18 +12,18 @@ const {
 const { authMiddleware } = require("../middleware/authMiddleware");
 
 // Create a new shipment
-router.post("/", createShipment);
+router.post("/", authMiddleware, createShipment);
 
 //Get All Shipments
-router.get("/", getAllShipments);
+router.get("/", authMiddleware, getAllShipments);
 
 //Get A Shipment by Id
-router.get("/:shipmentId", getShipmentById);
+router.get("/:shipmentId", authMiddleware, getShipmentById);
 
 //To Updata A Shipment
-router.put("/:shipmentId", updateShipment);
+router.put("/:shipmentId", authMiddleware, updateShipment);
 
 //To Delete A SHipment
-router.delete("/:shipmentId", deleteShipment);
+router.delete("/:shipmentId", authMiddleware, deleteShipment);
 
 module.exports = router;

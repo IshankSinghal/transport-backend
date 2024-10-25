@@ -15,27 +15,32 @@ const {
   getOutstandingAmountByClient,
   markBillAsPaid,
 } = require("../controller/billingController");
+const { authMiddleware } = require("../middleware/authMiddleware");
 
-router.post("/", createBill);
+router.post("/", authMiddleware, createBill);
 
-router.get("/", getAllBills);
+router.get("/", authMiddleware, getAllBills);
 
-router.get("/:billId", getBillById);
+router.get("/:billId", authMiddleware, getBillById);
 
-router.put("/:id", updateBill);
+router.put("/:id", authMiddleware, updateBill);
 
-router.delete("/:id", deleteBill);
+router.delete("/:id", authMiddleware, deleteBill);
 
-router.patch("/:id/payment-status", updatePaymentStatus);
+router.patch("/:id/payment-status", authMiddleware, updatePaymentStatus);
 
-router.get("/outstanding/:clientId", getOutstandingAmountByClient);
+router.get(
+  "/outstanding/:clientId",
+  authMiddleware,
+  getOutstandingAmountByClient,
+);
 
-router.get("/status/:status", getBillsByPaymentStatus);
+router.get("/status/:status", authMiddleware, getBillsByPaymentStatus);
 
-router.get("/client/:clientId", getBillsByClient);
+router.get("/client/:clientId", authMiddleware, getBillsByClient);
 
-router.get("/overdue", getOverdueBills);
+router.get("/overdue", authMiddleware, getOverdueBills);
 
-router.patch("/:id/mark-paid", markBillAsPaid);
+router.patch("/:id/mark-paid", authMiddleware, markBillAsPaid);
 
 module.exports = router;
